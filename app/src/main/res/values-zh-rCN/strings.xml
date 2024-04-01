@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">ADownKyi</string>
+    <string name="search">搜索</string>
+    <string name="search_clear">清空</string>
+    <string name="search_back">返回</string>
+    <string name="search_failed">搜索失败,请检查网络连接</string>
+    <string name="get_search_data">获取到%d条视频</string>
+    <string name="video_play_number">%s播放</string>
+    <string name="video_danmaku_number">%s弹幕</string>
+    <string name="video_like_number">%s点赞</string>
+    <string name="video_coin_number">%s投币</string>
+    <string name="video_favorite_number">%s收藏</string>
+    <string name="video_share_number">%s分享</string>
+    <string name="video_reply_number">%s评论</string>
+    <string name="settings">设置</string>
+    <string name="download">下载</string>
+    <string name="home">主页</string>
+    <string name="select_all">全选</string>
+</resources>
