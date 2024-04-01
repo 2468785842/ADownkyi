@@ -13,6 +13,7 @@ import org.mockito.ArgumentMatchers
 import org.powermock.api.mockito.PowerMockito
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
+import java.io.IOException
 import java.util.UUID
 import kotlin.concurrent.thread
 
@@ -82,7 +83,7 @@ class BuiltinDownloaderTest {
                 println("$id: success")
             }
 
-            override fun error(id: UUID) {
+            override fun error(id: UUID, exception: IOException) {
                 println("$id: error")
             }
 
