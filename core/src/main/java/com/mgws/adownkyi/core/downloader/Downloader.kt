@@ -32,7 +32,8 @@ interface Downloader {
     /**
      * 启动服务,只有调用此方法才会开始执行下载任务
      *
-     * @param serializeDownloadTask 启动之后立即添加任务序列化字符串, [stop]保存任务列表,可以在此恢复
+     * @param serializeDownloadTask 启动之后立即添加任务序列化字符串,
+     * [Downloader.serializeDownloadTask]保存任务列表,可以在此恢复
      */
     suspend fun start(serializeDownloadTask: String? = null)
 

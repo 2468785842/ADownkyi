@@ -22,7 +22,7 @@ object AppMessagePublisher {
     private val eventEmitter = HashMap<KClass<*>, HashMap<KClass<*>, (Message) -> Unit>>()
 
     /**
-     * @param clazz 对这个类发布的消息感兴趣
+     * @param clazz 取消订阅
      */
     fun Any.unSubscribe(clazz: KClass<*>) {
         val messageMap = eventEmitter[clazz] ?: return
