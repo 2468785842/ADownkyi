@@ -1,4 +1,3 @@
-
 import com.android.build.gradle.TestedExtension
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 
@@ -24,7 +23,7 @@ android {
         applicationId = "com.mgws.adownkyi"
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.1"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -65,7 +64,7 @@ android {
                 project.extensions.getByType(BaseAppModuleExtension::class.java).defaultConfig.minSdk
             val abi = filters.find { it.filterType == "ABI" }?.identifier ?: "all"
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "${project.name}-$ver-${abi}-sdk$minSdk.apk"
+                "${rootProject.name}-$ver-${abi}-sdk$minSdk.apk"
         }
     }
 
