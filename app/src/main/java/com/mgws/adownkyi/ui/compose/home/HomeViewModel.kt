@@ -97,7 +97,7 @@ class HomeViewModel @Inject constructor(
             }
 
         } else {
-            _tip.emit(context.getString(R.string.search_failed))
+            _tip.emit(context.getString(R.string.search_failed_not_find))
         }
 
         _loading.emit(false)

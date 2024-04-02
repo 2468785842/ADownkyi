@@ -59,7 +59,7 @@ fun SearchUserInput(
 private fun SearchUserInput(
     query: String,
     active: Boolean,
-    historys: List<String>,
+    historyList: List<String>,
     onSearch: (String) -> Unit,
     onQueryChange: (String) -> Unit,
     onDelHistory: (String) -> Unit,
@@ -109,7 +109,7 @@ private fun SearchUserInput(
     ) {
         //History
         LazyColumn {
-            items(items = historys) { history ->
+            items(items = historyList) { history ->
                 ListItem(
                     headlineContent = {},
                     trailingContent = {

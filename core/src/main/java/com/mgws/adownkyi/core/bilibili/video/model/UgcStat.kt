@@ -8,7 +8,7 @@ data class UgcStat(
     @SerialName("season_id") val seasonId: Long,
     val view: Long,
     val danmaku: Long,
-    val favorite: Long,
+    val favorite: Long? = null,
     val coin: Long,
     val share: Long,
     @SerialName("now_rank") val nowRank: Long,

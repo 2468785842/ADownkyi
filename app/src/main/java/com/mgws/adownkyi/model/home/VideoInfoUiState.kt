@@ -28,7 +28,7 @@ data class VideoInfoUiState(
     var danmakuNumber: String,
     var likeNumber: String,
     var coinNumber: String,
-    var favoriteNumber: String,
+    var favoriteNumber: String? = null,
     var shareNumber: String,
     var replyNumber: String,
     var upName: String,

@@ -9,7 +9,7 @@ data class VideoStat(
     val view: Long,
     val danmaku: Long,
     val reply: Long,
-    val favorite: Long,
+    val favorite: Long? = null,
     val coin: Long,
     val share: Long,
     @SerialName("now_rank") val nowRank: Long,

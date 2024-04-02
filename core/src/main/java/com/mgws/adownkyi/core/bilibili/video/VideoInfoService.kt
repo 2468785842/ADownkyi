@@ -3,6 +3,7 @@ package com.mgws.adownkyi.core.bilibili.video
 import com.mgws.adownkyi.core.bilibili.HttpClient
 import com.mgws.adownkyi.core.bilibili.Result
 import com.mgws.adownkyi.core.bilibili.WbiSign
+import com.mgws.adownkyi.core.bilibili.video.model.SeasonsArchivesList
 import com.mgws.adownkyi.core.bilibili.video.model.VideoPage
 import com.mgws.adownkyi.core.bilibili.video.model.VideoView
 import com.mgws.adownkyi.core.utils.logE
@@ -30,6 +31,25 @@ class VideoInfoService {
             "https://api.bilibili.com/x/player/pagelist",
             bvid, aid
         )
+
+    suspend fun videoSeasonList(mid: Long, seasonId: Long): SeasonsArchivesList? {
+        val url = "https://api.bilibili.com/x/polymer/web-space/seasons_archives_list"
+
+        val result = HttpClient.get<SeasonsArchivesList>(
+            url, WbiSign.encodeWbi(
+                "mid" to mid,
+                "season_id" to seasonId,
+                "sort_reverse" to false,
+            )
+        )
+        return when (result) {
+            is Result.Success -> result.data
+            is Result.Failure -> {
+                logE("videoSeasonList", result.throwable)
+                null
+            }
+        }
+    }
 
 
     private suspend inline fun <reified T> fetchData(

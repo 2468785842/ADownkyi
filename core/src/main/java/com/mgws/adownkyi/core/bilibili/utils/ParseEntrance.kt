@@ -1,5 +1,11 @@
 package com.mgws.adownkyi.core.bilibili.utils
 
+import com.mgws.adownkyi.core.bilibili.HttpClient
+import com.mgws.adownkyi.core.bilibili.HttpConfig
+import com.mgws.adownkyi.core.utils.logE
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 
 /**
  * 解析输入的字符串
@@ -16,23 +22,47 @@ package com.mgws.adownkyi.core.bilibili.utils
  **/
 object ParseEntrance {
     private const val WWW_URL = "https://www.bilibili.com"
-    private const val ShareWwwUrl = "https://www.bilibili.com/s"
-    private const val ShortUrl = "https://b23.tv/"
-    private const val MobileUrl = "https://m.bilibili.com"
+    private const val SHARE_WWW_URL = "https://www.bilibili.com/s"
+    private const val SHORT_URL = "https://b23.tv/"
+    private const val MOBILE_URL = "https://m.bilibili.com"
 
-    private const val SpaceUrl = "https://space.bilibili.com"
+    private const val SPACE_URL = "https://space.bilibili.com"
 
-    private const val VideoUrl = "$WWW_URL/video/"
-    private const val BangumiUrl = "$WWW_URL/bangumi/play/"
-    private const val BangumiMediaUrl = "$WWW_URL/bangumi/media/"
-    private const val CheeseUrl = "$WWW_URL/cheese/play/"
-    private const val FavoritesUrl1 = "$WWW_URL/medialist/detail/"
-    private const val FavoritesUrl2 = "$WWW_URL/medialist/play/"
+    private const val VIDEO_URL = "$WWW_URL/video/"
+    private const val BANGUMI_URL = "$WWW_URL/bangumi/play/"
+    private const val BANGUMI_MEDIA_URL = "$WWW_URL/bangumi/media/"
+    private const val CHEESE_URL = "$WWW_URL/cheese/play/"
+    private const val FAVORITES_URL1 = "$WWW_URL/medialist/detail/"
+    private const val FAVORITES_URL2 = "$WWW_URL/medialist/play/"
 
 
     // -------------------------------------------------------------------
     // ---------------------------- 视频 ----------------------------------
     // -------------------------------------------------------------------
+
+    fun isShortVideoUrl(input: String): Boolean = input.startsWith(SHORT_URL)
+
+    suspend fun getShortVideoRedirect(input: String): String? = withContext(Dispatchers.IO) {
+        val urlConnect =
+            HttpClient.getHttpConnection(
+                "GET", input,
+                HttpConfig()
+            )
+        try {
+            urlConnect.instanceFollowRedirects = false
+            urlConnect.connect()
+            val headerField = urlConnect.getHeaderField("Location")
+            if (headerField != null) {
+                return@withContext headerField
+            }
+        } catch (e: Exception) {
+            logE("redirect failed", e)
+            return@withContext null
+        } finally {
+            urlConnect.disconnect()
+        }
+        return@withContext null
+    }
 
     /**
      * 是否为Av Id
@@ -178,13 +208,13 @@ object ParseEntrance {
      * 是否为收藏夹 Url1
      */
     fun isFavoritesUrl1(input: String): Boolean =
-        isFavoritesId(getId(input, FavoritesUrl1) ?: "")
+        isFavoritesId(getId(input, FAVORITES_URL1) ?: "")
 
     /**
      * 是否为收藏夹 Url2
      */
     fun isFavoritesUrl2(input: String): Boolean =
-        isFavoritesId((getId(input, FavoritesUrl2) ?: "").split('/')[0])
+        isFavoritesId((getId(input, FAVORITES_URL2) ?: "").split('/')[0])
 
     /**
      * 获取收藏夹 Id
@@ -194,10 +224,10 @@ object ParseEntrance {
             input.substring(2).toLong()
 
         isFavoritesUrl1(input) ->
-            getId(input, FavoritesUrl1)!!.substring(2).toLong()
+            getId(input, FAVORITES_URL1)!!.substring(2).toLong()
 
         isFavoritesUrl2(input) ->
-            getId(input, FavoritesUrl2)!!.substring(2).split('/')[0].toLong()
+            getId(input, FAVORITES_URL2)!!.substring(2).split('/')[0].toLong()
 
         else -> -1
     }
@@ -223,7 +253,7 @@ object ParseEntrance {
     /**
      * 是否为用户 Url
      */
-    fun isUserUrl(input: String): Boolean = input.contains(SpaceUrl)
+    fun isUserUrl(input: String): Boolean = input.contains(SPACE_URL)
 
     /**
      * 获取用户 Mid
@@ -273,18 +303,18 @@ object ParseEntrance {
     /**
      * 从url获取视频 id
      */
-    private fun getVideoId(input: String): String = getId(input, VideoUrl) ?: ""
+    private fun getVideoId(input: String): String = getId(input, VIDEO_URL) ?: ""
 
     /**
      * 从url获取番剧 id
      */
     private fun getBangumiId(input: String): String =
-        getId(input, BangumiUrl) ?: getId(input, BangumiMediaUrl) ?: ""
+        getId(input, BANGUMI_URL) ?: getId(input, BANGUMI_MEDIA_URL) ?: ""
 
     /**
      * 从url获取课程 id
      */
-    private fun getCheeseId(input: String): String = getId(input, CheeseUrl) ?: ""
+    private fun getCheeseId(input: String): String = getId(input, CHEESE_URL) ?: ""
 
     /**
      * 是否为数字型 id
@@ -307,14 +337,14 @@ object ParseEntrance {
 
         var url: String = enableHttps(input)!!
         url = deleteUrlParam(url)
-        url = url.replace(ShareWwwUrl, WWW_URL)
-        url = url.replace(MobileUrl, WWW_URL)
+        url = url.replace(SHARE_WWW_URL, WWW_URL)
+        url = url.replace(MOBILE_URL, WWW_URL)
 
         url = when {
             url.contains("b23.tv/ss") || url.contains("b23.tv/ep") ->
-                url.replace(ShortUrl, BangumiUrl)
+                url.replace(SHORT_URL, BANGUMI_URL)
 
-            else -> url.replace(ShortUrl, VideoUrl)
+            else -> url.replace(SHORT_URL, VIDEO_URL)
         }
 
         return when {

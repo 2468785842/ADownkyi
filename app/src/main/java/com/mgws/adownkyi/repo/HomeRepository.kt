@@ -34,7 +34,22 @@ class HomeRepository @Inject constructor(
 
         (ParseEntrance.isBvId(url) || ParseEntrance.isBvUrl(url)) -> {
             val bvid: String = ParseEntrance.getBvId(url)
-            videoInfoService.videoViewInfo(bvid = bvid)
+            val videoViewInfo = videoInfoService.videoViewInfo(bvid = bvid)
+            // TODO: 视频合集,我们要获取所有视频
+//            if (videoViewInfo?.seasonId != null) {
+//                val videoSeasonList = videoInfoService.videoSeasonList(
+//                    videoViewInfo.owner.mid,
+//                    videoViewInfo.seasonId!!
+//                )
+//                videoSeasonList!!.aids.map { videoInfoService.videoViewInfo(aid = it) }
+//            }
+            videoViewInfo
+        }
+        // 短链接重定向
+        ParseEntrance.isShortVideoUrl(url) -> {
+            val redirect = ParseEntrance.getShortVideoRedirect(url)
+            if (redirect != null) getVideoView(redirect)
+            else null
         }
 
         else -> null
@@ -232,7 +247,7 @@ class HomeRepository @Inject constructor(
             danmakuNumber = videoView.stat.danmaku.toWordNumber(),
             likeNumber = videoView.stat.like.toWordNumber(),
             coinNumber = videoView.stat.coin.toWordNumber(),
-            favoriteNumber = videoView.stat.favorite.toWordNumber(),
+            favoriteNumber = videoView.stat.favorite?.toWordNumber(),
             shareNumber = videoView.stat.share.toWordNumber(),
             replyNumber = videoView.stat.reply.toWordNumber(),
             description = videoView.desc,

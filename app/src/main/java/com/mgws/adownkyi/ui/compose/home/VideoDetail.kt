@@ -97,12 +97,14 @@ fun VideoDetail(
                             )
                         }
                         Row {
-                            Text(
-                                stringResource(
-                                    R.string.video_favorite_number,
-                                    videoInfoUiState.favoriteNumber
+                            videoInfoUiState.favoriteNumber?.let {
+                                Text(
+                                    stringResource(
+                                        R.string.video_favorite_number,
+                                        it
+                                    )
                                 )
-                            )
+                            }
                             Text(
                                 modifier = Modifier.padding(start = 10.dp, end = 10.dp),
                                 text = stringResource(

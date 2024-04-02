@@ -16,4 +16,5 @@
     <string name="download">Download</string>
     <string name="home">Home</string>
     <string name="select_all">Select All</string>
+    <string name="search_failed_not_find">video not find</string>
 </resources>
