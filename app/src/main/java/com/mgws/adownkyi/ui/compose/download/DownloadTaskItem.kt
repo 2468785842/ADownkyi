@@ -207,7 +207,10 @@ fun DownloadTaskItem(
                         modifier = Modifier
                             .weight(.05f)
                             .fillMaxWidth(),
-                        progress = { downloadTask.current.toFloat() / downloadTask.total },
+                        progress = {
+                            if (downloadTask.total == 0) 0f
+                            else downloadTask.current.toFloat() / downloadTask.total
+                        },
                     )
 
                 MEDIA_MERGE ->
