@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class HomeRepository @Inject constructor(
     private val videoInfoService: VideoInfoService,
@@ -34,16 +33,7 @@ class HomeRepository @Inject constructor(
 
         (ParseEntrance.isBvId(url) || ParseEntrance.isBvUrl(url)) -> {
             val bvid: String = ParseEntrance.getBvId(url)
-            val videoViewInfo = videoInfoService.videoViewInfo(bvid = bvid)
-            // TODO: 视频合集,我们要获取所有视频
-//            if (videoViewInfo?.seasonId != null) {
-//                val videoSeasonList = videoInfoService.videoSeasonList(
-//                    videoViewInfo.owner.mid,
-//                    videoViewInfo.seasonId!!
-//                )
-//                videoSeasonList!!.aids.map { videoInfoService.videoViewInfo(aid = it) }
-//            }
-            videoViewInfo
+            videoInfoService.videoViewInfo(bvid = bvid)
         }
         // 短链接重定向
         ParseEntrance.isShortVideoUrl(url) -> {
@@ -56,7 +46,6 @@ class HomeRepository @Inject constructor(
     }
 
     /* 获取视频剧集 */
-    @Throws(Exception::class)
     suspend fun getVideoPages(videoView: VideoView): List<VideoItemUiState> {
         if (videoView.pages.isEmpty()) return emptyList()
 
@@ -81,7 +70,7 @@ class HomeRepository @Inject constructor(
             )
 
             if (playUrl == null) {
-                throw Exception("get playUrl error: ${videoView.aid} ${videoView.bvid} ${page.cid}")
+                return emptyList()
             }
 
             val audioQualityFormatList = ParseUtils.getAudioQualityFormatList(playUrl)
@@ -257,4 +246,27 @@ class HomeRepository @Inject constructor(
         )
     }
 
+
+    /**
+     * 获取视频合集
+     */
+    suspend fun getViewSeasonList(viewInfo: VideoView): List<VideoView> {
+
+        // 视频合集,我们要获取所有视频
+        if (viewInfo.seasonId != null) {
+            val videoSeasonList = videoInfoService.videoSeasonList(
+                viewInfo.owner.mid,
+                viewInfo.seasonId!!
+            )
+
+            if (videoSeasonList != null) {
+                return videoSeasonList.aids.mapNotNull {
+                    videoInfoService.videoViewInfo(aid = it)
+                }
+            }
+        }
+        return emptyList()
+    }
+
 }
+

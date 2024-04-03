@@ -4,6 +4,8 @@ import com.mgws.adownkyi.core.utils.logD
 import com.mgws.adownkyi.core.utils.logE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.brotli.dec.BrotliInputStream
@@ -29,10 +31,10 @@ object HttpClient {
         val data: T? = null,
     )
 
-    suspend inline fun <reified T> get(url: String, params: Map<String, String>) =
+    suspend inline fun <reified T> get(url: String, params: Map<String, String> = emptyMap()) =
         doResponse<T>("GET", url, params)
 
-    suspend inline fun <reified T> post(url: String, params: Map<String, String>) =
+    suspend inline fun <reified T> post(url: String, params: Map<String, String> = emptyMap()) =
         doResponse<T>("POST", url, params)
 
     fun getHttpConnection(
@@ -57,6 +59,7 @@ object HttpClient {
         }
 
     /* 处理响应数据 */
+    @OptIn(ExperimentalSerializationApi::class)
     suspend inline fun <reified T> doResponse(
         method: String, url: String,
         params: Map<String, String>,
@@ -70,6 +73,9 @@ object HttpClient {
             }
         } catch (e: IOException) {
             logE("连接网络失败", e)
+            return Result.Failure(e)
+        } catch (e: MissingFieldException) {
+            logE("与期望的数据不一致!", e)
             return Result.Failure(e)
         }
 
@@ -91,9 +97,11 @@ object HttpClient {
     @Throws(IOException::class)
     suspend fun request(
         method: String,
-        url: String, params: Map<String, String>,
+        url: String, params: Map<String, String> = emptyMap(),
     ): String = withContext(Dispatchers.IO) {
-        val tUrl = "$url?${WbiSign.getUrlParam(params)}"
+
+        val tUrl = if (params.isEmpty()) url
+        else "$url?${WbiSign.getUrlParam(params)}"
 
         logD("-".repeat(20))
         logD("request url: $tUrl")

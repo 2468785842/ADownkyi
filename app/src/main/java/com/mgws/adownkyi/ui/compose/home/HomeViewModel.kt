@@ -82,19 +82,29 @@ class HomeViewModel @Inject constructor(
 
         val videoView = homeRepository.getVideoView(url)
         // videoView == null搜索失败,
-        // 可能是网络问题, url不合法, bilibili服务器返回错误
         if (videoView != null) {
+            //TODO: 视频集合,添加不同视频视频详细信息
             val videoInfoView = homeRepository.getVideoInfoView(videoView)
             _videoInfoUiState.emit(videoInfoView)
 
-            try {
+            var videoCount = 0
+            // 获取视频集合
+            val videoViewList = homeRepository.getViewSeasonList(videoView)
+            if (videoViewList.isNotEmpty()) {
+
+                _videoPagesModel.emit(videoViewList.map {
+                    val videoPages = homeRepository.getVideoPages(it)
+                    videoCount += videoPages.size
+                    videoPages
+                }.flatten())
+
+            } else {
                 val videoPages = homeRepository.getVideoPages(videoView)
-                //更新页面状态
                 _videoPagesModel.emit(videoPages)
-                _tip.emit(context.getString(R.string.get_search_data, videoPages.size))
-            } catch (e: Exception) {
-                _tip.emit(context.getString(R.string.search_failed))
+                videoCount = videoPages.size
             }
+
+            _tip.emit(context.getString(R.string.get_search_data, videoCount))
 
         } else {
             _tip.emit(context.getString(R.string.search_failed_not_find))

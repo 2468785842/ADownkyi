@@ -103,7 +103,8 @@ fun VideoItem(
                 Row(
                     modifier = Modifier
                         .wrapContentHeight()
-                        .fillMaxWidth().padding(horizontal = 10.dp),
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -142,7 +143,7 @@ fun VideoList(
     onCheckedChange: (VideoItemUiState) -> Unit,
 ) {
     LazyColumn {
-        items(items = videoPageUiStates, key = { it.order }) {
+        items(items = videoPageUiStates, key = { "${it.avid}-${it.bvid}-${it.cid}" }) {
             VideoItem(it, onCheckedChange)
         }
     }

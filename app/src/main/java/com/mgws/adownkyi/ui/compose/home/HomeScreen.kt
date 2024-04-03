@@ -10,6 +10,7 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mgws.adownkyi.ui.compose.LoadingProgress
 import com.mgws.adownkyi.utils.toDownloadUiState
+import kotlinx.coroutines.delay
 
 enum class TabType(
     val compose: @Composable (HomeViewModel) -> Unit,
@@ -58,6 +60,11 @@ fun HomeScreen(
     val loading by homeViewModel.loading.collectAsState()
     val searchHistory by homeViewModel.historyList.collectAsState()
     val tip by homeViewModel.tip.collectAsState()
+
+    LaunchedEffect(tip) {
+        delay(8000)
+        homeViewModel.tip.emit("")
+    }
 
     var query by homeViewModel.query
 

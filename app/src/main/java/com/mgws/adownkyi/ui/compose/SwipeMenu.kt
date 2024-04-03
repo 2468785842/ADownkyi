@@ -7,7 +7,6 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -31,30 +30,26 @@ abstract class SwipeMenuBoxScope {
     @Composable
     fun SwipeMenu(content: @Composable () -> Unit) {
 
-        Row(
-            modifier = Modifier
-                .offset(x = width)
-                .height(height)
-                .wrapContentWidth()
-        ) {
-            Layout(content = {
-                content()
-            }) { measurables, constraints ->
-                val placeables = measurables.map { measurable ->
-                    measurable.measure(constraints)
-                }
-                val widths = placeables.sumOf { it.width }
+        Layout(modifier = Modifier
+            .offset(x = width)
+            .height(height)
+            .wrapContentWidth(), content = {
+            content()
+        }) { measurables, constraints ->
+            val placeables = measurables.map { measurable ->
+                measurable.measure(constraints)
+            }
+            val widths = placeables.sumOf { it.width }
 
-                block(DraggableAnchors {
-                    0 at 0f
-                    1 at -widths.toFloat()
-                })
-                layout(constraints.maxWidth, constraints.maxHeight) {
-                    var x = 0
-                    placeables.forEach { placeable ->
-                        placeable.placeRelative(x = x, y = 0)
-                        x += placeable.width
-                    }
+            block(DraggableAnchors {
+                0 at 0f
+                1 at -widths.toFloat()
+            })
+            layout(constraints.maxWidth, constraints.maxHeight) {
+                var x = 0
+                placeables.forEach { placeable ->
+                    placeable.placeRelative(x = x, y = 0)
+                    x += placeable.width
                 }
             }
         }

@@ -1,13 +1,16 @@
 package com.mgws.adownkyi.core.bilibili
 
+import com.mgws.adownkyi.core.bilibili.model.Login
 import com.mgws.adownkyi.core.utils.byteArrayToHexString
+import com.mgws.adownkyi.core.utils.logI
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.security.MessageDigest
-import java.time.Clock
-import java.time.LocalDateTime
 
 
 object WbiSign {
+    private var key: String? = null
 
     /* 打乱重排实时口令 */
     private fun getMixinKey(origin: String): String {
@@ -27,19 +30,20 @@ object WbiSign {
         return temp.substring(0, 32)
     }
 
-    fun encodeWbi(
+    suspend fun encodeWbi(
         vararg params: Pair<String, Any>,
-        imgKey: String = "",
-        subKey: String = "",
     ): Map<String, String> {
         val paraStr =
             HashMap(mapOf(*params.map { it.first to it.second.toString() }.toTypedArray()))
 
-        val mixinKey: String = getMixinKey(imgKey + subKey)
-        val currTime: String = LocalDateTime.now(Clock.systemUTC()).second.toString()
+        if (key == null) {
+            key = getKey()
+        }
+
+        val mixinKey: String = getMixinKey(key!!)
 
         //添加 wts 字段
-        paraStr["wts"] = currTime
+        paraStr["wts"] = (System.currentTimeMillis() / 1000).toString()
         //过滤 value 中的 "!'()*" 字符
         paraStr.forEach {
             it.value.filter { c ->
@@ -48,7 +52,9 @@ object WbiSign {
         }
 
         // 序列化参数
-        val query: String = URLEncoder.encode(getUrlParam(paraStr), "UTF-8")
+        val query: String = withContext(Dispatchers.IO) {
+            URLEncoder.encode(getUrlParam(paraStr), "UTF-8")
+        }
         val md5 = MessageDigest.getInstance("MD5")
         val digest = md5.digest((query + mixinKey).toByteArray(Charsets.UTF_8))
         val wbiSign = digest.byteArrayToHexString().lowercase()
@@ -63,5 +69,13 @@ object WbiSign {
             paramStr.append("$k=$v&")
         }
         return paramStr.substring(0, paramStr.length - 1)
+    }
+
+    private suspend fun getKey(): String {
+        val result = HttpClient.request("GET", "https://api.bilibili.com/x/web-interface/nav")
+        return HttpClient.json.decodeFromString<HttpClient.HttpResult<Login>>(result).let {
+            logI("User login $it")
+            it.data!!.wbiImg.run { imgUrl + subUrl }
+        }
     }
 }

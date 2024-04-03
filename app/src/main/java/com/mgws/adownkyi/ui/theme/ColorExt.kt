@@ -28,10 +28,10 @@ val LightLocalColorScheme = ColorScheme(
 )
 
 val DarkLocalColorScheme = ColorScheme(
-    warn = passDark,
-    warnContainer = passContainerDark,
-    pass = warnDark,
-    passContainer = warnContainerDark,
+    warn = warnDark,
+    warnContainer = warnContainerDark,
+    pass = passDark,
+    passContainer = passContainerDark,
 )
 
 
