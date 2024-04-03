@@ -68,12 +68,14 @@ class VideoItemCacheWorker @AssistedInject constructor(
             val stringList = mutableListOf<String>()
             var dataSize = 0
 
-            for (videoItemCache in videoItemCacheList) {
-
+            for (index in videoItemCacheList.indices) {
+                val videoItemCache = videoItemCacheList[index]
                 val hexString = ProtoBuf.encodeToHexString(videoItemCache)
                 val hexStringSize = hexString.length
                 // Worker数据限制每次只能传10kb
-                if (dataSize + hexStringSize >= 8 * 1024) {
+                if (dataSize + hexStringSize >= 8 * 1024 ||
+                    index == videoItemCacheList.lastIndex
+                ) {
                     val inputData = workDataOf(
                         ACTION to SAVE_VIDEO_ITEM_CACHE,
                         VIDEO_ITEM_CACHE_LIST to stringList.toTypedArray()

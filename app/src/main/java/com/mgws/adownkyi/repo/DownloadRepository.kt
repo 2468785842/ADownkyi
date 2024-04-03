@@ -54,10 +54,17 @@ class DownloadRepository @Inject constructor(
                 it.listener = DownloadListenerImpl()
                 // 加载缓存
                 CoroutineScope(Dispatchers.Default).launch {
-                    appCacheRepository.downloadTaskCacheFlow.first().forEach { downloadItem ->
-                        downloadItem.isLoadingForSerialize = true
-                        downloadTaskMap[downloadItem.id] = downloadItem
-                    }
+                    appCacheRepository.downloadTaskCacheFlow.first()
+                        .forEach { downloadItem ->
+                            downloadTaskMap[downloadItem.id] = downloadItem.copy(
+                                isLoadingForSerialize = true
+                            )
+                            if (downloadItem.status == DownloadItemUiState.MEDIA_MERGE ||
+                                downloadItem.current == downloadItem.total
+                            ) {
+                                mergeMedia(downloadTaskMap[downloadItem.id]!!)
+                            }
+                        }
                     _loading.emit(false)
                 }
             }
@@ -149,6 +156,37 @@ class DownloadRepository @Inject constructor(
         appCacheRepository.updateDownloadTaskCache(downloadTaskMap[id]!!)
     }
 
+    private fun mergeMedia(downloadItem: DownloadItemUiState) {
+        downloadItem.status = DownloadItemUiState.MEDIA_MERGE
+        val job = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                AndroidMediaHelper.merge(
+                    "$path${File.separator}${downloadItem.name}.a",
+                    "$path${File.separator}${downloadItem.name}.v",
+                    "$path${File.separator}${downloadItem.name}.mp4"
+                )
+            } catch (e: Exception) {
+                downloadItem.status = DownloadItemUiState.FAILED
+                logE("merge video error", e)
+            }
+
+            context.copyFile(
+                settingsRepository.savePath.first().toUri(),
+                "${downloadItem.name}.mp4",
+                "$path${File.separator}${downloadItem.name}.mp4", "video/mp4"
+            )
+
+            File("$path${File.separator}${downloadItem.name}.mp4").delete()
+
+            downloadItem.status = DownloadItemUiState.SUCCESS
+
+            //更新缓存
+            appCacheRepository.updateDownloadTaskCache(downloadItem)
+        }
+
+        mergeMediaJob[downloadItem.id] = job
+    }
+
     // -----------------------------------回调-----------------------------------------//
     inner class DownloadListenerImpl : DownloadListener {
 
@@ -166,35 +204,7 @@ class DownloadRepository @Inject constructor(
 
         override fun success(id: UUID) {
             downloadTaskMap[id]?.let {
-                it.status = DownloadItemUiState.MEDIA_MERGE
-                val job = CoroutineScope(Dispatchers.IO).launch {
-                    try {
-                        AndroidMediaHelper.merge(
-                            "$path${File.separator}${it.name}.a",
-                            "$path${File.separator}${it.name}.v",
-                            "$path${File.separator}${it.name}.mp4"
-                        )
-                    } catch (e: Exception) {
-                        it.status = DownloadItemUiState.FAILED
-                        logE("merge video error", e)
-                    }
-
-                    context.copyFile(
-                        settingsRepository.savePath.first().toUri(),
-                        "${it.name}.mp4",
-                        "$path${File.separator}${it.name}.mp4", "video/mp4"
-                    )
-
-                    File("$path${File.separator}${it.name}.mp4").delete()
-
-                    it.status = DownloadItemUiState.SUCCESS
-
-                    //更新缓存
-                    appCacheRepository.updateDownloadTaskCache(it)
-                }
-
-                mergeMediaJob[id] = job
-
+                mergeMedia(it)
             }
         }
 

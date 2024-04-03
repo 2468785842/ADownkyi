@@ -9,14 +9,14 @@ import kotlinx.serialization.protobuf.ProtoNumber
 @HiltDataStore("app_prefs.pb")
 @OptIn(ExperimentalSerializationApi::class)
 data class AppPreferences(
+    @ProtoNumber(1)
     private val _maxHistory: Int = 0,
+    @ProtoNumber(2)
     private val _savePath: String = "",
 ) {
-    @ProtoNumber(1)
     val maxHistory = _maxHistory
     fun hasMaxHistory(): Boolean = maxHistory > 0
 
-    @ProtoNumber(2)
     val savePath = _savePath
     fun hasSavePath(): Boolean = savePath.isNotEmpty()
 

@@ -12,6 +12,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,10 +24,12 @@ class AppCacheRepository @Inject constructor(
     settingsRepository: SettingsRepository,
 ) : CoroutineScope by CoroutineScope(dispatcher) {
 
+    private val mutex = Mutex()
+
     companion object {
         private val dispatcher =
             Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { context, e ->
-                context.logE("save cache error", e)
+                context.logE("AppCacheRepository error", e)
             }
     }
 
@@ -49,19 +53,22 @@ class AppCacheRepository @Inject constructor(
     fun addSearchHistory(value: String) = launch {
         if (value.isBlank()) return@launch
         val history = searchHistoryFlow.first().toMutableList()
-        val maxHistory = maxHistoryFlow.value
 
         //没有就添加
         if (history.firstOrNull { it == value } == null) {
-            if (history.size == maxHistory) {
+            if (history.size == maxHistoryFlow.value) {
                 history.removeFirst()
                 history.add(value)
-                appCache.updateData { preferences ->
-                    preferences.copy(searchHistory = history)
+                mutex.withLock {
+                    appCache.updateData { preferences ->
+                        preferences.copy(searchHistory = history)
+                    }
                 }
             } else {
-                appCache.updateData { preferences ->
-                    preferences.copy(searchHistory = preferences.searchHistory + value)
+                mutex.withLock {
+                    appCache.updateData { preferences ->
+                        preferences.copy(searchHistory = searchHistoryFlow.first() + value)
+                    }
                 }
             }
         }
@@ -78,67 +85,76 @@ class AppCacheRepository @Inject constructor(
             if (index == -1) return@launch
             history.removeAt(index)
 
-            appCache.updateData { preferences ->
-                preferences.copy(
-                    searchHistory = history
-                )
+            mutex.withLock {
+                appCache.updateData { preferences ->
+                    preferences.copy(searchHistory = history)
+                }
             }
         }
     }
 
     fun clearVideoItemCacheList() = launch {
-        appCache.updateData { preferences ->
-            preferences.copy(videoItemCache = emptyList())
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(videoItemCache = emptyList())
+            }
         }
     }
 
     fun addAllVideoItemCacheList(videoItemCacheList: List<VideoItemUiState>) = launch {
-        appCache.updateData { preferences ->
-            preferences.copy(
-                videoItemCache = preferences.videoItemCache + videoItemCacheList
-            )
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(
+                    videoItemCache = videoListCacheFlow.first() + videoItemCacheList
+                )
+            }
         }
     }
 
     fun addDownloadTaskCacheList(downloadTaskCache: DownloadItemUiState) = launch {
-        appCache.updateData { preferences ->
-            preferences.copy(
-                downloadTaskCache = preferences.downloadTaskCache + downloadTaskCache
-            )
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(
+                    downloadTaskCache = downloadTaskCacheFlow.first() + downloadTaskCache
+                )
+            }
         }
     }
 
     fun removeDownloadTaskCacheList(id: UUID) = launch {
-        appCache.updateData { preferences ->
-            preferences.copy(
-                downloadTaskCache = preferences.downloadTaskCache.filter { it.id != id }
-            )
+        val tasks = downloadTaskCacheFlow.first().toMutableList()
+        tasks.removeIf { it.id == id }
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(downloadTaskCache = tasks)
+            }
         }
     }
 
     fun updateDownloadTaskCache(downloadTaskCache: DownloadItemUiState) = launch {
-        appCache.updateData { preferences ->
-            val newCache = preferences.downloadTaskCache.map {
-                if (it.id == downloadTaskCache.id) {
-                    return@map downloadTaskCache.copy(
-                        _id = downloadTaskCache.id.toString(),
-                        _current = downloadTaskCache.current,
-                        _total = downloadTaskCache.total,
-                        _status = downloadTaskCache.status,
-                    )
-                } else it
+        val downloadTaskCacheList = downloadTaskCacheFlow.first()
+        val newCache = downloadTaskCacheList.map {
+            if (it.id == downloadTaskCache.id) {
+                return@map downloadTaskCache.copy(
+                    _id = downloadTaskCache.id.toString(),
+                    _current = downloadTaskCache.current,
+                    _total = downloadTaskCache.total,
+                    _status = downloadTaskCache.status,
+                )
+            } else it
+        }
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(downloadTaskCache = newCache)
             }
-            preferences.copy(
-                downloadTaskCache = newCache
-            )
         }
     }
 
     fun updateDownloaderInfoCache(downloaderInfoCache: String) = launch {
-        appCache.updateData { preferences ->
-            preferences.copy(
-                downloaderInfoCache = downloaderInfoCache
-            )
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(downloaderInfoCache = downloaderInfoCache)
+            }
         }
     }
 }

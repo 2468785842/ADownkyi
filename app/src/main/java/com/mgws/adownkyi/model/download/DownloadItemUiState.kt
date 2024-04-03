@@ -21,9 +21,12 @@ data class DownloadItemUiState(
     val name: String,
     @ProtoNumber(3)
     val coverUrl: String,
+    @ProtoNumber(4)
     private val _current: Int = 0,
+    @ProtoNumber(5)
     private val _total: Int = 0,
     @Status
+    @ProtoNumber(6)
     private val _status: Int = PREPARE,
     @ProtoNumber(7)
     val avid: Long,
@@ -37,13 +40,10 @@ data class DownloadItemUiState(
     @Transient
     val id: UUID = UUID.fromString(_id)
 
-    @ProtoNumber(4)
     var current by mutableIntStateOf(_current)
 
-    @ProtoNumber(5)
     var total by mutableIntStateOf(_total)
 
-    @ProtoNumber(6)
     var status by mutableIntStateOf(_status)
 
     companion object {
@@ -53,16 +53,17 @@ data class DownloadItemUiState(
         const val SUCCESS = 2
         const val FAILED = 3
         const val PAUSED = 4
+
+        @IntDef(
+            PREPARE,
+            DOWNLOADING,
+            MEDIA_MERGE,
+            SUCCESS,
+            FAILED,
+            PAUSED
+        )
+        @Retention(AnnotationRetention.SOURCE)
+        annotation class Status
     }
 
-    @IntDef(
-        PREPARE,
-        DOWNLOADING,
-        MEDIA_MERGE,
-        SUCCESS,
-        FAILED,
-        PAUSED
-    )
-    @Retention(AnnotationRetention.SOURCE)
-    annotation class Status
 }

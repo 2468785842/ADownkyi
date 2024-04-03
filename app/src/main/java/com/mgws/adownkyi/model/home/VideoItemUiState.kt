@@ -17,25 +17,25 @@ data class VideoItemUiState(
     @Transient
     var playUrl: PlayUrl? = null,
     @ProtoNumber(1)
-    var avid: Long,
+    val avid: Long,
     @ProtoNumber(2)
-    var bvid: String,
+    val bvid: String,
     @ProtoNumber(3)
-    var cid: Long,
+    val cid: Long,
     @ProtoNumber(4)
-    var episodeId: Long,
+    val episodeId: Long,
     @ProtoNumber(5)
-    var publishTime: String,
+    val publishTime: String,
     @Transient
     var initialIsSelected: Boolean = false,
     @ProtoNumber(6)
-    var order: Int,
+    val order: Int,
     @ProtoNumber(7)
-    var name: String,
+    val name: String,
     @ProtoNumber(8)
-    var duration: String,
+    val duration: String,
     @ProtoNumber(9)
-    var firstFrame: String? = null,
+    val firstFrame: String? = null,
     @Transient
     var audioQualityFormatList: List<String> = emptyList(),
     @Transient

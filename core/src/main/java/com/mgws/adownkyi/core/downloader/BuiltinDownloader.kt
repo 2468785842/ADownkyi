@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -55,9 +56,6 @@ class BuiltinDownloader(savePath: String) :
                 downloads(info.group.map { taskQueue[it]!! })
 
             if (info.status != DownloadInfo.ERROR) {
-                if (info.status == DownloadInfo.SUCCESS) {
-                    cancelTask(info.id)
-                }
                 return@coroutineScope
             }
             taskRetryCount--
@@ -66,58 +64,61 @@ class BuiltinDownloader(savePath: String) :
         } while (info.status == DownloadInfo.ERROR && taskRetryCount != 0)
     }
 
-    override fun getTaskForStatus(status: Int) = taskQueue.values.filter {
-        it.status == status && it.group[0] == it.id
-    }
+    private suspend fun prepareDownloadStream(info: DownloadInfo): DownloadStream? =
+        withContext(dispatcher) {
+            val file = File("$savePath${File.separator}${info.fileName}")
 
-    private fun prepareDownloadStream(info: DownloadInfo): DownloadStream? {
-        val file = File("$savePath${File.separator}${info.fileName}")
+            if (!file.exists()) {
+                file.createNewFile()
+            }
 
-        if (!file.exists()) {
-            file.createNewFile()
+            val fileLength = file.length()
+
+            // 纠正已经下载的字节
+            if (info.current <= fileLength) {
+                info.current = fileLength
+            } else {
+                info.current = 0
+            }
+
+            if (info.total < info.current) {
+                info.current = 0
+            }
+
+            val outputStream = if (info.current == 0L) {
+                file.outputStream()
+            } else {
+                FileOutputStream(file, true)
+            }
+
+            //TODO: extract BiliBiliHttpConfig
+            val httpConfig = BiliBiliHttpConfig.copy(range = "bytes=${info.current}-")
+            val httpConnect = HttpClient.getHttpConnection("GET", info.url, httpConfig)
+
+            try {
+                httpConnect.connect()
+                if (httpConnect.responseCode == 416) {
+                    logW("http 416: out of range(${info.current},${info.total},$fileLength), ${file.name}")
+                    info.total = 0
+                    changeDownloadInfoState(info, DownloadInfo.ERROR)
+                    return@withContext null
+                }
+            } catch (e: IOException) {
+                logE("connect to server failed", e)
+                info.exception = e
+                changeDownloadInfoState(info, DownloadInfo.ERROR)
+                return@withContext null
+            }
+
+            val inputStream = HttpClient.getInputStreamAsEncoding(httpConnect)
+
+            info.total = info.current + httpConnect.contentLengthLong
+
+            return@withContext DownloadStream(
+                file to outputStream,
+                httpConnect to inputStream
+            )
         }
-
-        val fileLength = file.length()
-
-        // 纠正已经下载的字节
-        if (info.current <= fileLength) {
-            info.current = fileLength
-        } else {
-            info.current = 0
-        }
-
-        if (info.total < info.current) {
-            info.current = 0
-        }
-
-        val outputStream = if (info.current == 0L) {
-            file.outputStream()
-        } else {
-            FileOutputStream(file, true)
-        }
-
-        //TODO: extract BiliBiliHttpConfig
-        val httpConfig = BiliBiliHttpConfig.copy(range = "bytes=${info.current}-")
-        val httpConnect = HttpClient.getHttpConnection("GET", info.url, httpConfig)
-
-        try {
-            httpConnect.connect()
-        } catch (e: IOException) {
-            logE("connect to server failed", e)
-            info.exception = e
-            changeDownloadInfoState(info, DownloadInfo.ERROR)
-            return null
-        }
-
-        val inputStream = HttpClient.getInputStreamAsEncoding(httpConnect)
-
-        info.total = info.current + httpConnect.contentLengthLong
-
-        return DownloadStream(
-            file to outputStream,
-            httpConnect to inputStream
-        )
-    }
 
     private fun closeDownloadStream(downloadStream: DownloadStream) {
         val (_, outputStream) = downloadStream.fileP
@@ -246,6 +247,7 @@ class BuiltinDownloader(savePath: String) :
     }
 
     /**
+     * @param info 必须是主任务
      * 可以改变任务组状态,包括子任务
      */
     override fun changeDownloadInfoState(info: DownloadInfo, status: Int) {
@@ -256,6 +258,21 @@ class BuiltinDownloader(savePath: String) :
         if (info.status == DownloadInfo.SUCCESS) return
 
         info.group.forEach { taskQueue[it]?.status = status }
+
+        when (status) {
+            DownloadInfo.PREPARE -> {
+                runningTasks.remove(info.id)
+                prepareTasks.add(info.id)
+            }
+            DownloadInfo.RUNNING -> {
+                prepareTasks.remove(info.id)
+                runningTasks.add(info.id)
+            }
+            else -> {
+                prepareTasks.remove(info.id)
+                runningTasks.remove(info.id)
+            }
+        }
 
         when (status) {
             DownloadInfo.RUNNING -> CoroutineScope(Dispatchers.Default).launch {
@@ -278,6 +295,8 @@ class BuiltinDownloader(savePath: String) :
                 info.exception ?: IOException("unknown error")
             )
         }
+
+
     }
 
     private suspend fun progressMonitor(info: DownloadInfo) = coroutineScope {

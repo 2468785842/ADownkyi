@@ -86,7 +86,7 @@ interface Downloader {
     /**
      * 将当前下载任务信息序列化为JSON string
      *
-     * @return 序列化后的字符串
+     * @return 序列化后的字符串, 不包括成功的任务
      */
     fun serializeDownloadTask(): String
 }
