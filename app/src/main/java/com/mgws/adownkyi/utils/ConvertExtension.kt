@@ -21,7 +21,7 @@ fun VideoItemUiState.toDownloadUiState(): DownloadUiState {
     val videoCodecName = this.videoQuality!!.selectedVideoCodec
     //画质
     val resolution =
-        Constant.Quality(this.videoQuality!!.quality, this.videoQuality!!.qualityFormat)
+        Constant.Info(this.videoQuality!!.quality, this.videoQuality!!.qualityFormat)
     var dashVideo: PlayUrlDashVideo? = null
 
     for (video in this.playUrl!!.dash.video) {

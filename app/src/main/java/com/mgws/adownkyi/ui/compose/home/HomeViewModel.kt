@@ -56,6 +56,12 @@ class HomeViewModel @Inject constructor(
     val videoPages = _videoPagesModel
     //-----------------------------------------------------------------------//
 
+    val cookies = appCacheRepository.loginCookiesCacheFlow.toStateFlow(
+        emptyList<String>(),
+        viewModelScope,
+        { isNotEmpty() },
+    )
+
     init {
         subscribe(VideoItemCacheWorker::class, AppMessagePublisher.ALL) {
             _tip.value = it

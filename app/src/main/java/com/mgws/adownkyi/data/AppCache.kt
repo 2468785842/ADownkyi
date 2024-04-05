@@ -22,4 +22,7 @@ data class AppCache(
 
     @ProtoNumber(4)
     val downloaderInfoCache: String? = null,
+
+    @ProtoNumber(5)
+    val loginCookies: List<String> = emptyList(),
 )

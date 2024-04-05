@@ -19,7 +19,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.mgws.adownkyi.model.download.DownloadItemUiState
 import com.mgws.adownkyi.ui.compose.LoadingProgress
 
@@ -27,7 +27,7 @@ import com.mgws.adownkyi.ui.compose.LoadingProgress
 @Composable
 fun DownloadScreen(
     padding: PaddingValues,
-    downloadViewModel: DownloadViewModel = viewModel(),
+    downloadViewModel: DownloadViewModel = hiltViewModel(),
 ) {
 
     Surface(

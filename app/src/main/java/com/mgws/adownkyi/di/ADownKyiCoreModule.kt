@@ -22,6 +22,4 @@ object ADownKyiCoreModule {
         @ApplicationContext context: Context,
     ): Downloader =
         BuiltinDownloader(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)!!.path)
-//        AndroidDownloader(context, Environment.DIRECTORY_DOWNLOADS)
-
 }

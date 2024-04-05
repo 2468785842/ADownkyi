@@ -23,7 +23,7 @@ android {
         applicationId = "com.mgws.adownkyi"
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0.2"
+        versionName = "1.0.3"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -76,6 +76,9 @@ dependencies {
     implementation(project(":datastore:annotations"))
     ksp(project(":datastore:compiler"))
 
+    // Geetest 人机验证
+    implementation(libs.sensebot)
+
     implementation(libs.androidx.documentfile)
 
     implementation(libs.coil.compose)
@@ -91,6 +94,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     /*-------------------------------Android X--------------------------------*/
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 

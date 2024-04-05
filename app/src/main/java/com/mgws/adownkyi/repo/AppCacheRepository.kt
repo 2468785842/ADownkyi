@@ -1,6 +1,7 @@
 package com.mgws.adownkyi.repo
 
 import androidx.datastore.core.DataStore
+import com.mgws.adownkyi.core.bilibili.HttpConfig
 import com.mgws.adownkyi.core.utils.logE
 import com.mgws.adownkyi.data.AppCache
 import com.mgws.adownkyi.model.download.DownloadItemUiState
@@ -45,7 +46,28 @@ class AppCacheRepository @Inject constructor(
     // 下载任务
     val downloaderInfoCacheFlow = appCache.data.map { it.downloaderInfoCache }
 
+    val loginCookiesCacheFlow = appCache.data.map { it.loginCookies }
+
     private val maxHistoryFlow = settingsRepository.maxHistory
+
+    init {
+        launch {
+            loginCookiesCacheFlow.collect { cookies ->
+                if (cookies.isEmpty()) return@collect
+                mutex.withLock {
+                    HttpConfig.BiliBiliHttpConfig.cookies = cookies
+                }
+            }
+        }
+    }
+
+    fun updateCookies(cookies: List<String>) = launch {
+        mutex.withLock {
+            appCache.updateData { preferences ->
+                preferences.copy(loginCookies = cookies)
+            }
+        }
+    }
 
     /**
      * 添加搜索记录,如果没有, 添加, 历史记录maxHistory,超过删除最旧的

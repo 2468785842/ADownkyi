@@ -46,7 +46,7 @@ object ParseEntrance {
         val urlConnect =
             HttpClient.getHttpConnection(
                 "GET", input,
-                HttpConfig()
+                HttpConfig.BiliBiliHttpConfig
             )
         try {
             urlConnect.instanceFollowRedirects = false

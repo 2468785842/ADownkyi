@@ -14,9 +14,12 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.ui.Modifier
+import com.geetest.sdk.GT3ConfigBean
+import com.geetest.sdk.GT3GeetestUtils
 import com.mgws.adownkyi.core.utils.logI
 import com.mgws.adownkyi.core.utils.logW
 import com.mgws.adownkyi.repo.DownloadRepository
+import com.mgws.adownkyi.repo.LoginRepository
 import com.mgws.adownkyi.repo.SettingsRepository
 import com.mgws.adownkyi.service.DownloadService
 import com.mgws.adownkyi.service.DownloadServiceBinder
@@ -29,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -37,6 +41,12 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var loginRepository: LoginRepository
+
+    // 初始化Geetest
+    lateinit var gt3GeetestUtils: GT3GeetestUtils
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -59,6 +69,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        gt3GeetestUtils = configureGT3()
         val intent = Intent(this, DownloadService::class.java)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
@@ -77,7 +88,13 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         unbindService(serviceConnection)
+        gt3GeetestUtils.destory()
     }
+
+//    override fun onConfigurationChanged(newConfig: Configuration) {
+//        super.onConfigurationChanged(newConfig)
+//        gt3GeetestUtils.changeDialogLayout()
+//    }
 
     companion object {
 
@@ -102,6 +119,24 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun configureGT3() = GT3GeetestUtils(this).also { gt3GeetestUtils ->
+        gt3GeetestUtils.init(
+            GT3ConfigBean().apply {
+                isReleaseLog = false
+                pattern = 1
+                isCanceledOnTouchOutside = false
+                lang = null
+                timeout = 10000
+                webviewTimeout = 10000
+                listener = CustomGT3Listener(
+                    loginRepository,
+                    this,
+                    gt3GeetestUtils
+                )
+            }
+        )
     }
 
 }

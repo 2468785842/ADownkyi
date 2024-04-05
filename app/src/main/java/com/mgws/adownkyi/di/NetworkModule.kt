@@ -1,5 +1,6 @@
 package com.mgws.adownkyi.di
 
+import com.mgws.adownkyi.core.bilibili.login.LoginService
 import com.mgws.adownkyi.core.bilibili.video.VideoInfoService
 import com.mgws.adownkyi.core.bilibili.videoStream.VideoStreamService
 import dagger.Module
@@ -19,4 +20,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideVideoStreamService() = VideoStreamService()
+
+    @Provides
+    @Singleton
+    fun provideLoginService() = LoginService()
 }

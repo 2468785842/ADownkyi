@@ -1,7 +1,7 @@
 package com.mgws.adownkyi.core.downloader
 
-import com.mgws.adownkyi.core.bilibili.BiliBiliHttpConfig
 import com.mgws.adownkyi.core.bilibili.HttpClient
+import com.mgws.adownkyi.core.bilibili.HttpConfig
 import com.mgws.adownkyi.core.utils.logE
 import com.mgws.adownkyi.core.utils.logW
 import kotlinx.coroutines.CoroutineScope
@@ -91,8 +91,10 @@ class BuiltinDownloader(savePath: String) :
                 FileOutputStream(file, true)
             }
 
-            //TODO: extract BiliBiliHttpConfig
-            val httpConfig = BiliBiliHttpConfig.copy(range = "bytes=${info.current}-")
+            // TODO: extract BiliBiliHttpConfig
+            // TODO: 暂时先这样
+            val httpConfig = HttpConfig.BaseHttpConfig(range = "bytes=${info.current}-")
+            httpConfig.cookies = HttpConfig.BiliBiliHttpConfig.cookies
             val httpConnect = HttpClient.getHttpConnection("GET", info.url, httpConfig)
 
             try {
@@ -264,10 +266,12 @@ class BuiltinDownloader(savePath: String) :
                 runningTasks.remove(info.id)
                 prepareTasks.add(info.id)
             }
+
             DownloadInfo.RUNNING -> {
                 prepareTasks.remove(info.id)
                 runningTasks.add(info.id)
             }
+
             else -> {
                 prepareTasks.remove(info.id)
                 runningTasks.remove(info.id)

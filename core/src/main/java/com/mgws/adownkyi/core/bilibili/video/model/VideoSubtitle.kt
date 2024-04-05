@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class VideoSubtitle(
     @SerialName("allow_submit") val allowSubmit: Boolean,
-    val list: List<Subtitle>,
+    val list: List<Subtitle>? = emptyList(),
 )
 
 @Serializable
@@ -15,8 +15,8 @@ data class Subtitle(
     val lan: String,
     @SerialName("lan_doc") val lanDoc: String,
     @SerialName("is_lock") val isLock: Boolean,
-    @SerialName("author_mid") val authorMid: Long,
-    @SerialName("subtitle_mid") val subtitleMid: Long,
+    @SerialName("author_mid") val authorMid: Long? = 0,
+    @SerialName("subtitle_mid") val subtitleMid: Long? = 0,
     @SerialName("subtitle_url") val subtitleUrl: String,
     val author: SubtitleAuthor,
 )

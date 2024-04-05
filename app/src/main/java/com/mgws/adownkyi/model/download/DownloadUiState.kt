@@ -29,7 +29,7 @@ data class DownloadUiState(
     val name: String,
     val duration: String,
     val videoCodecName: String,
-    val resolution: Constant.Quality,
-    val audioCodec: Constant.Quality,
+    val resolution: Constant.Info,
+    val audioCodec: Constant.Info,
     val fileSize: Int? = null,
 )

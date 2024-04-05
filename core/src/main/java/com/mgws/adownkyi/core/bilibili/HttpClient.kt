@@ -68,7 +68,7 @@ object HttpClient {
         val httpRequest = try {
             withContext(Dispatchers.Default) {
                 json.decodeFromString<HttpResult<T>>(
-                    request(method, url, params)
+                    request(method, HttpConfig.BiliBiliHttpConfig, url, params)
                 )
             }
         } catch (e: IOException) {
@@ -78,6 +78,8 @@ object HttpClient {
             logE("与期望的数据不一致!", e)
             return Result.Failure(e)
         }
+
+        logD("httpRequest: $httpRequest")
 
         return when (httpRequest.code) {
             0 -> Result.Success<T>(httpRequest.data!!)
@@ -97,10 +99,11 @@ object HttpClient {
     @Throws(IOException::class)
     suspend fun request(
         method: String,
+        httpConfig: HttpConfig,
         url: String, params: Map<String, String> = emptyMap(),
     ): String = withContext(Dispatchers.IO) {
 
-        val tUrl = if (params.isEmpty()) url
+        val tUrl = if (params.isEmpty() || method == "POST") url
         else "$url?${WbiSign.getUrlParam(params)}"
 
         logD("-".repeat(20))
@@ -108,11 +111,17 @@ object HttpClient {
         logD("request method: $method")
 
         val httpConnect = getHttpConnection(
-            method,
-            tUrl,
-            BiliBiliHttpConfig
+            method, tUrl, httpConfig
         )
-        httpConnect.connect()
+
+        if (method == "POST") {
+            httpConnect.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            httpConnect.doOutput = true
+            httpConnect.outputStream.use {
+                it.write(WbiSign.getUrlParam(params).toByteArray())
+                it.flush()
+            }
+        }
 
         logD("code: ${httpConnect.responseCode}")
         logD("encode: ${httpConnect.contentEncoding}")

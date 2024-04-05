@@ -15,10 +15,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -26,37 +22,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mgws.adownkyi.R
 
-@Composable
-fun SearchUserInput(
-    query: String,
-    history: List<String>,
-    modifier: Modifier = Modifier,
-    onSearch: (String) -> Unit,
-    onQueryChange: (String) -> Unit,
-    onClear: () -> Unit,
-    onDelHistory: (String) -> Unit,
-) {
-    var active by remember { mutableStateOf(false) }
-
-    SearchUserInput(
-        query, active, history,
-        onSearch = {
-            active = false
-            onSearch(it)
-        },
-        onQueryChange = onQueryChange,
-        onDelHistory = onDelHistory,
-        onActiveChange = { active = it },
-        onClear = onClear,
-        onBack = { active = false },
-        modifier
-    )
-
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchUserInput(
+fun SearchUserInput(
     query: String,
     active: Boolean,
     historyList: List<String>,
@@ -102,8 +71,6 @@ private fun SearchUserInput(
                         .padding(start = 16.dp)
                         .clickable { onClear() },
                 )
-            } else {
-                //显示用户头像:TODO
             }
         },
     ) {

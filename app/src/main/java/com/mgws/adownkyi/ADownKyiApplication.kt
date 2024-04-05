@@ -6,7 +6,7 @@ import android.content.Context
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class ADownKyiApplication : Application(){
+class ADownKyiApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()

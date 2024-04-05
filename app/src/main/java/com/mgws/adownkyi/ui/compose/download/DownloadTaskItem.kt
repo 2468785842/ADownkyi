@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.mgws.adownkyi.model.download.DownloadItemUiState
 import com.mgws.adownkyi.model.download.DownloadItemUiState.Companion.DOWNLOADING
@@ -53,7 +53,7 @@ import com.mgws.adownkyi.utils.byteAbbrev
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DownloadTaskItem(
-    downloadViewModel: DownloadViewModel = viewModel(),
+    downloadViewModel: DownloadViewModel = hiltViewModel(),
     downloadTask: DownloadItemUiState,
     isFocused: Boolean,
     onClick: () -> Unit,

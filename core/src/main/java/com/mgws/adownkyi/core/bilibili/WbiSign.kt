@@ -10,6 +10,7 @@ import java.security.MessageDigest
 
 
 object WbiSign {
+
     private var key: String? = null
 
     /* 打乱重排实时口令 */
@@ -34,8 +35,7 @@ object WbiSign {
         vararg params: Pair<String, Any>,
     ): Map<String, String> {
         val paraStr =
-            HashMap(mapOf(*params.map { it.first to it.second.toString() }.toTypedArray()))
-
+            LinkedHashMap(mapOf(*params.map { it.first to it.second.toString() }.toTypedArray()))
         if (key == null) {
             key = getKey()
         }
@@ -66,13 +66,18 @@ object WbiSign {
     fun getUrlParam(params: Map<String, String>): String {
         val paramStr = StringBuilder()
         for ((k, v) in params) {
-            paramStr.append("$k=$v&")
+            val encodeV = URLEncoder.encode(v, "UTF-8")
+            paramStr.append("$k=$encodeV&")
         }
         return paramStr.substring(0, paramStr.length - 1)
     }
 
     private suspend fun getKey(): String {
-        val result = HttpClient.request("GET", "https://api.bilibili.com/x/web-interface/nav")
+        val result = HttpClient.request(
+            "GET",
+            HttpConfig.BiliBiliHttpConfig,
+            "https://api.bilibili.com/x/web-interface/nav"
+        )
         return HttpClient.json.decodeFromString<HttpClient.HttpResult<Login>>(result).let {
             logI("User login $it")
             it.data!!.wbiImg.run { imgUrl + subUrl }
