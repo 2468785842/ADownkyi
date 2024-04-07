@@ -36,7 +36,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.geetest.sdk.GT3GeetestUtils
 import com.mgws.adownkyi.MainActivity
-import com.mgws.adownkyi.Router
 import com.mgws.adownkyi.ui.theme.LocalColorScheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -241,7 +240,8 @@ fun Login(
                     onClick = {
                         coroutine.launch {
                             if (login(phoneNumber, smsCode).await()) {
-                                navController.navigate(Router.MainRouter.route)
+//                                navController.navigate(Router.MainRouter.route)
+                                navController.popBackStack()
                             }
                         }
                     }) {

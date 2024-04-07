@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.BufferedInputStream
-import java.io.IOException
 
 class LoginService {
 
@@ -31,59 +30,52 @@ class LoginService {
             "POST", url, HttpConfig.BiliBiliHttpConfig
         )
         val result: Result<List<String>> = withContext(Dispatchers.IO) {
-            try {
-                // 写入表单数据
-                connect.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-                connect.doOutput = true
-                connect.outputStream.use {
-                    it.write(
-                        WbiSign.getUrlParam(
-                            WbiSign.encodeWbi(
-                                "cid" to 86,
-                                "tel" to tel,
-                                "code" to code,
-                                "source" to "main-fe-header",
-                                "captcha_key" to captchaKey,
-                                "keep" to true
-                            )
-                        ).toByteArray()
-                    )
-                    it.flush()
+            // 写入表单数据
+            connect.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            connect.doOutput = true
+            connect.outputStream.use {
+                it.write(
+                    WbiSign.getUrlParam(
+                        WbiSign.encodeWbi(
+                            "cid" to 86,
+                            "tel" to tel,
+                            "code" to code,
+                            "source" to "main-fe-header",
+                            "captcha_key" to captchaKey,
+                            "keep" to true
+                        )
+                    ).toByteArray()
+                )
+                it.flush()
+            }
+
+            // 获取Cookie
+            val cookies =
+                connect.headerFields.filter { it.key == "Set-Cookie" }.flatMap { it.value }
+
+            if (cookies.isNotEmpty()) {
+                return@withContext Result.Success(cookies)
+            }
+
+            connect.inputStream.use {
+                val encodeStream = HttpClient.getInputStreamAsEncoding(connect)
+                val responseBody =
+                    String(BufferedInputStream(encodeStream).readBytes(), Charsets.UTF_8)
+
+                logD("responseBody: $responseBody")
+
+                val pojo: HttpClient.HttpResult<WebSmsLogin> = try {
+                    HttpClient.json.decodeFromString(responseBody)
+                } catch (e: Exception) {
+                    return@withContext Result.Failure(e)
+                } finally {
+                    connect.disconnect()
                 }
 
-                // 获取Cookie
-                val cookies =
-                    connect.headerFields.filter { it.key == "Set-Cookie" }.flatMap { it.value }
-
-                if (cookies.isNotEmpty()) {
-                    return@withContext Result.Success(cookies)
+                AUTH_ERROR.find { it.id == pojo.code }?.let { info ->
+                    logD("Auth Error: ${info.name}")
+                    return@withContext Result.Failure(Exception(info.name))
                 }
-
-                connect.inputStream.use {
-                    val encodeStream = HttpClient.getInputStreamAsEncoding(connect)
-                    val responseBody =
-                        String(BufferedInputStream(encodeStream).readBytes(), Charsets.UTF_8)
-
-                    logD("responseBody: $responseBody")
-
-                    val pojo: HttpClient.HttpResult<WebSmsLogin> = try {
-                        HttpClient.json.decodeFromString(responseBody)
-                    } catch (e: Exception) {
-                        return@withContext Result.Failure(e)
-                    } finally {
-                        connect.disconnect()
-                    }
-
-                    AUTH_ERROR.find { it.id == pojo.code }?.let { info ->
-                        logD("Auth Error: ${info.name}")
-                        return@withContext Result.Failure(Exception(info.name))
-                    }
-                }
-
-            } catch (e: IOException) {
-                return@withContext Result.Failure(e)
-            } finally {
-                connect.disconnect()
             }
             return@withContext Result.Failure(Exception("未知错误"))
         }

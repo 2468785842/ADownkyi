@@ -21,13 +21,25 @@ class LoginRepository @Inject constructor(
      * first challenge
      * second validate
      * three seccode
+     *
+     * Geetest 验证结果由[com.mgws.adownkyi.CustomGT3Listener]设置
      */
     var machineVerification: Triple<String, String, String>? = null
 
+    /**
+     * null 无
+     * true 验证成功
+     * false 验证失败
+     *
+     * Geetest 验证结果, [com.mgws.adownkyi.CustomGT3Listener]设置
+     */
     var verification = MutableStateFlow<Boolean?>(null)
 
     private var token: String? = null
 
+    /**
+     * 获取验证码, Geetest需要, [com.mgws.adownkyi.CustomGT3Listener]由调用
+     */
     suspend fun getCaptcha(): Captcha? =
         when (val captcha = loginService.getCaptcha()) {
             is Result.Success -> {
@@ -38,6 +50,12 @@ class LoginRepository @Inject constructor(
             is Result.Failure -> null
         }
 
+    /**
+     * 发送短信
+     * @param phoneNumber 手机号
+     *
+     * @return captchaKey 登录接口参数[login]
+     */
     suspend fun sendSms(phoneNumber: String): String? {
         if (verification.value == null) return null
         if (verification.value!!) {
@@ -59,6 +77,13 @@ class LoginRepository @Inject constructor(
         return null
     }
 
+    /**
+     * @param phoneNumber 手机号
+     * @param smsCode 短信验证码
+     * @param captchaKey 查看[sendSms]返回值
+     *
+     * @return true 成功, false 失败
+     */
     suspend fun login(phoneNumber: String, smsCode: String, captchaKey: String): Boolean {
         when (val smsLogin = loginService.smsLogin(phoneNumber, smsCode, captchaKey)) {
             is Result.Success -> {

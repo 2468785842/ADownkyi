@@ -42,6 +42,9 @@ sealed class HttpConfig(
             return "XY${idE.toByteArray().byteArrayToHexString()}${idMD5.byteArrayToHexString()}"
         }
 
+        /**
+         * 生成随机的设备MAC
+         */
         private fun generateRandomMacAddress(): String {
             val macArr = mutableListOf<String>()
 
